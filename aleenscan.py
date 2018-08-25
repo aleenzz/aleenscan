@@ -1,57 +1,57 @@
-# -*- coding: utf-8 -*- 
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#Author:404
+#By T00ls.Net
+from aleenscan import aleen
 import requests
-from bs4 import BeautifulSoup
-import re
-import jieba.analyse
+import argparse
 
-getvaluenots = []
-getvalues = []
 
-def getkeywordnot(url):
-	req_url = requests.get(url+"/search/error.html")
-	req_url.encoding="utf-8"
-	bs = BeautifulSoup(req_url.text,"lxml")
-	bs = re.split(r'\s+',bs.find("body").get_text())
-	text = ''.join(bs)
-	print text
-	tfidf = jieba.analyse.extract_tags
-	keywords = tfidf(text,topK=20, withWeight=True)
-	for keyword in keywords:
-		getvaluenots.append(keyword[1])
-	return getvaluenots
+def getdict(dict_l):
+	f = open(dict_l,"r")
+	dictur=[]
+	dicturls =f.readlines()
+	for dicturl in dicturls:
+		dictur.append(dicturl.strip("\n"))
+	return dictur
+def scan(url,dict_l):
+	error_url = aleen.gettext(url)
+	dict_urls = getdict(dict_l)
+	info_code, info_content = aleen.getinfo(url)
+	if info_code == 404:
+		print "scan v1"
+		for dict_url in dict_urls:
+			scan1_code,scan2_content= aleen.scanv1(url,dict_url)
+			if scan1_code == 200:
+				print url+dict_url+" ======"+('\033[1;31;40m%s\033[0m' % str(scan1_code))
+			else:
+				print url+dict_url+" ======"+str(scan1_code)
 
-def getkeyword(url):
-	req_url = requests.get(url)
-	req_url.encoding="utf-8"
-	bs = BeautifulSoup(req_url.text,"lxml")
-	bs = re.split(r'\s+',bs.find("body").get_text())
-	text = ''.join(bs)
-	print text
-	tfidf = jieba.analyse.extract_tags
-	keywords = tfidf(text,topK=20,withWeight=True)
-	for keyword in keywords:
-		getvalues.append(keyword[1])
-	return getvalues
-
-def getvalue(getvalues,getvaluenots):
-	product = 0.0
-	numa = 0.0
-	numb = 0.0
-	print getvalues
-	for a,b in zip(getvalues,getvaluenots):
-		product += a*b
-		numa += a ** 2
-		numb += b ** 2
-	if numa == 0.0 or numb == 0.0:
-		return 0
+	elif "不存在" in info_content or "404/search_children" in info_content:
+		print "scan v2"
+		for dict_url in dict_urls:
+			scan2_code,scan2_content= aleen.scanv1(url,dict_url)
+			if "不存在" in scan2_content or "404/search_children" in scan2_content:
+				print url+dict_url+" ======404"
+			else:
+				print url+dict_url+('\033[1;31;40m%s\033[0m' % 200)
 	else:
-		print round(product / ((numa**0.5)*(numb**0.5))*100,2)
+		print "scan v3"
+		for dict_url in dict_urls:
+			scandict = aleen.getnot(url,dict_url)
+			word1,word2 = aleen.getwords(error_url,scandict)
+			nubmer = aleen.getjg(word1,word2)
+			if nubmer < 80:
+				print url+dict_url+('\033[1;31;40m%s\033[0m' % 'YES')
+			else:
+				print url+dict_url+"===="+"NO"
 
-def main(urls):
-	a = getkeywordnot(urls)
-	b = getkeyword(urls)
-	getvalue(a,b)
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--url','-u',help="your url")
+	parser.add_argument('--dict','-d',help='your dict')
+	args = parser.parse_args()
+	scan(args.url,args.dict)
 
-	
 if __name__ == '__main__':
-	main("https://www.baidu.com/")
+	main()
