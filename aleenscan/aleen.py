@@ -39,9 +39,9 @@ def getwords(url1, url2):
     word1 = []
     word2 = []
     analyse_tag1 = jieba.analyse.extract_tags(url1, withWeight=True)
-    analyse_tag1 = jieba.analyse.extract_tags(url2, withWeight=True)
+    analyse_tag2 = jieba.analyse.extract_tags(url2, withWeight=True)
     tag_dict1 = {i[0]: i[1] for i in analyse_tag1}
-    tag_dict2 = {i[0]: i[1] for i in analyse_tag1}
+    tag_dict2 = {i[0]: i[1] for i in analyse_tag2}
     merged_tag = set(tag_dict1.keys()) | set(tag_dict2.keys())
     for i in merged_tag:
         if i in tag_dict1:
